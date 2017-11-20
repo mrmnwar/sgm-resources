@@ -3,6 +3,7 @@
 uniform half4x4 matrixCurrent;
 uniform half4x4 matrixPrevious;
 uniform half2 uBlur;
+uniform half uMotionBlurColorConstant;
 uniform sampler2D sMotionBlurMask;
 
 #define MOTION_BLUR_SAMPLES int(12)
@@ -32,7 +33,7 @@ half4		main		(		v2p		I		)		:		COLOR
 	
 	blurred *= tex2D(sMotionBlurMask,texcoord);
 	
-	result += blurred;
+	result += blurred*uMotionBlurColorConstant;//FIXME
 	return half4(result,1);
 	
 	/*
