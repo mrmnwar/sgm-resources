@@ -39,6 +39,12 @@ half4		main		(		v2p		I		)		:		COLOR
 	
 	blurred *= tex2D(sMotionBlurMask,texcoord);
 	
+	/*
+	result *= 1-mask;
+	blurred *= mask;
+	final = result + blurred;
+	*/
+	
 	result += blurred*uMotionBlurColorConstant;//FIXME
 	return half4(result,1);
 	

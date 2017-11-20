@@ -271,8 +271,8 @@ void        tonemap              (out half4 low, out half4 high, half3 rgb, half
 //		rgb		/=	def_hdr	;
 //		high	= 	half4	(rgb, dot(rgb,0.333f)-def_hdr_clip)		;
 }
-half4		combine_bloom        (half3  low, half4 high)	{
-        return        half4(low + high*high.a, 1.h);
+float4		combine_bloom        (float3  low, float4 high)	{
+        return        float4(low + high*high.a, 1.h);
 }
 
 float3	v_hemi        	(float3 n)                        	{        return L_hemi_color*(.5f + .5f*n.y);                   }
