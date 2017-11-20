@@ -1,24 +1,24 @@
 #ifndef SGM_BOKEH_H_INCLUDED
 #define SGM_BOKEH_H_INCLUDED
 
-uniform float uBokehBias;
+uniform half uBokehBias;
 uniform float uBokehGain;
-uniform float uBokehMaxBlur;
+uniform half uBokehMaxBlur;
 uniform float uBokehTreshold;
-uniform float uDepthBlurSize;
-uniform float uPentagonFeather;
-uniform float uBokehFringe;
+uniform half uDepthBlurSize;
+uniform half uPentagonFeather;
+uniform half uBokehFringe;
 uniform float uBokehNoiseAmount;
 
 #define BOKEH_NOISE
-//#define BOKEH_PENTAGON
+//#define BOKEH_PENTAGON//use pentagonal shape
 #define BOKEH_RINGS int(3)
 #define BOKEH_SAMPLES int(3)
 
-float penta(float2 texcoord)
+half penta(float2 texcoord)//pentagonal shape
 {
-	//float scale = float(RINGS)-1.3;
-	float scale = float(BOKEH_RINGS)-1.3;
+
+	half scale = half(BOKEH_RINGS)-1.3;
 	float4 HS0 = float4( 1,            0,            0,  1);
 	float4 HS1 = float4( 0.309016994,  0.951056516,  0,  1);
 	float4 HS2 = float4(-0.809016994,  0.587785252,  0,  1);
@@ -26,12 +26,12 @@ float penta(float2 texcoord)
 	float4 HS4 = float4( 0.309016994, -0.951056516,  0,  1);
 	float4 HS5 = float4( 0,            0,            1,  1);
 	
-	float4 one=float4(1,1,1,1);
+	float4 one=float4(1.0,1.0,1.0,1.0);
 	
 	float4 P = float4(texcoord,scale,scale);
 	
-	float4 dist=float4(0,0,0,0);
-	float inorout=-4;
+	float4 dist=float4(0.0,0.0,0.0,0.0);
+	half inorout=-4.0;
 	
 	dist.x = dot(P,HS0);
 	dist.y = dot(P,HS1);
@@ -48,13 +48,13 @@ float penta(float2 texcoord)
 	dist = smoothstep(-uPentagonFeather,uPentagonFeather,dist);
 	inorout += dist.x;
 	
-	return clamp(inorout,0,1);//saturate
+	return clamp(inorout,0.0,1.0);//saturate
 }
 
-float bdepth(float2 texcoord)
+half bdepth(float2 texcoord)//blurring depth
 {
-	float d=0;
-	float kernel[9]
+	half d=0.0;
+	half kernel[9]
 	float2 offset[9];
 	
 	float2 wh = float2(screen_res.z,screen_res.w)*uDepthBlurSize;
@@ -77,30 +77,31 @@ float bdepth(float2 texcoord)
 	
 	for (int i = 0; i < 9; i++)
 	{
-		float tmp = tex2D(sPosition,texcoord + offset[i]).z;
+		half tmp = tex2D(sPosition,texcoord + offset[i]).z;
 		d += tmp * kernel[i];
 	}
 	
 	return d;
 }
 
-float3 color(float2 texcoord, float blur)
+half3 color(float2 texcoord, half blur)//processing the sample
 {
-	float3 col=float3(0,0,0);
+	half3 col=half3(0.0,0.0,0.0);
 	
-	col.r = tex2D(sScene,texcoord + float2(0,1)*screen_res.zw*uBokehFringe*blur).r;
+	//MAYBE tex2Dlod
+	col.r = tex2D(sScene,texcoord + float2(0.0,1.0)*screen_res.zw*uBokehFringe*blur).r;
 	col.g = tex2D(sScene,texcoord + float2(-0.866,-0.5)*screen_res.zw*uBokehFringe*blur).g;
 	col.b = tex2D(sScene,texcoord + float2(0.866,-0.6)*screen_res.zw*uBokehFringe*blur).b;
 	
 	float lum = dot(col,LUMINANCE_VECTOR);
 	float tresh = max((lum-uBokehTreshold)*uBokehGain,0.0);
-	return col+lerp(float3(0,0,0),col,tresh*blur);
+	return col+lerp(half3(0.0,0.0,0.0),col,tresh*blur);
 }
 
-float2 rand(float2 texcoord)
+float2 rand(float2 texcoord)//generating noise/pattern texture for dithering
 {
-	float noiseX = ((frac(1-texcoord.x*(screen_res.x/2))*0.25)+(frac(texcoord.y*(screen_res.y/2))*0.75))*2-1;
-	float noiseY = ((frac(1-texcoord.x*(screen_res.x/2))*0.75)+(frac(texcoord.y*(screen_res.y/2))*0.25))*2-1;
+	float noiseX = ((frac(1.0-texcoord.x*(screen_res.x/2.0))*0.25)+(frac(texcoord.y*(screen_res.y/2.0))*0.75))*2.0-1.0;
+	float noiseY = ((frac(1.0-texcoord.x*(screen_res.x/2.0))*0.75)+(frac(texcoord.y*(screen_res.y/2.0))*0.25))*2.0-1.0;
 	
 	#ifdef BOKEH_NOISE
 		noiseX = clamp(frac(sin(dot(texcoord,float2(12.9898,78.233)))*43758.5453),0,1)*2-1;
@@ -109,49 +110,56 @@ float2 rand(float2 texcoord)
 	return float2(noiseX,noiseY);
 }
 
-float3 bokeh(float2 texcoord, float blur)
+half3 bokeh(float2 texcoord, float blur)
 {
+	
+	//calculation of pattern for dithering
+	
 	float2 noise = rand(texcoord)*uBokehNoiseAmount*blur;
+	
+	//getting blur x and y step factor
 	
 	float w = screen_res.z * blur * uBokehMaxBlur + noise.x;
 	float h = screen_res.w * blur * uBokehMaxBlur + noise.y;
 	
-	float3 col = float3(0,0,0);
+	//calculation of final color
 	
-	if (blur < 0.05)
+	half3 col = half3(0.0,0.0,0.0);
+	
+	if (blur < 0.05)//some optimization thingy
 	{
 		col = tex2D(sScene,texcoord).rgb;
 	}
 	else
 	{
 		col = tex2D(sScene,texcoord).rgb;
-		float s=1;
+		half s=1.0;
 		int ringsamples;
 		
 		for (int i = 1; i <= BOKEH_RINGS; i++)
-		//for (int i = 1; i <= RINGS; i++)
+
 		{
-			//ringsamples = i * SAMPLES;
+
 			ringsamples = i * BOKEH_SAMPLES;
 			
 			for (int j = 0; j < ringsamples; j++)
 			{
-				float step = PI*2/float(ringsamples);
+				float step = PI*2.0/float(ringsamples);
 				float pw = (cos(float(j)*step)*float(i));
 				float ph = (sin(float(j)*step)*float(i));
-				float p=1;
+				half p=1.0;
 				#ifdef BOKEH_PENTAGON
-				//#ifdef USE_BOKEH_PENTAGON
+
 					p = penta(float2(pw,ph));
 				#endif	
-				col += color(texcoord + float2(pw*w,ph*h),blur)*lerp(1,(float(i))/(float(BOKEH_RINGS)),uBokehBias)*p;	//lerp(1,(float(i))/(float(RINGS)),uBokehBias)*p;
-				//s +=1*lerp(1,(float(i))/(float(RINGS)),uBokehBias)*p;
-				s += 1*lerp(1,(float(i))/(float(BOKEH_RINGS)),uBokehBias)*p;
+				col += color(texcoord + float2(pw*w,ph*h),blur)*lerp(1.0,(float(i))/(float(BOKEH_RINGS)),uBokehBias)*p;	
+
+				s += 1.0*lerp(1.0,(float(i))/(float(BOKEH_RINGS)),uBokehBias)*p;
 			}
 		}
-		col/=s;
+		col/=s;//divide by sample count
 	}
 	return col;
 }
 
-#endif//SGM_BOKEH_H_INCLUDED
+#endif

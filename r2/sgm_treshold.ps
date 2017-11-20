@@ -11,10 +11,10 @@ half4		main		(		v2p		I		)		:		COLOR
 	
 	float luminance = dot(LUMINANCE_VECTOR,color.rgb);
 	
-	luminance = max(0,luminance-uTreshold);
+	luminance = max(0.0,luminance-uTreshold);
 	
-	color.rgb*=sign(luminance);
-	color.a=1;
+	color.rgb *= sign(luminance);
+	color.a=1.0;
 	
 	return color;
 }

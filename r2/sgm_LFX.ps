@@ -11,24 +11,24 @@ half3 textureDistorted(sampler2D sInput, float2 texcoord, float2 direction, floa
 }
 
 uniform float uGhostDispersal;
-uniform float uGhostWeight;
-uniform float uHaloWeight;
+uniform float uGhostWeight;//10
+uniform float uHaloWeight;//5
 uniform float uHaloWidth;
 uniform float uDistortion;
 
 uniform sampler2D s1Dcolor;
 uniform sampler2D sTreshold;
 
-#define GHOSTS 7//num of ghosts
-#define COLORIZE
-#define HALO
+#define LFX_GHOST int(7)//num of ghosts
+#define LFX_COLORIZE
+#define LFX_HALO
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 half4		main		(		v2p		I		)		:		COLOR
 {
-	float2 texcoord = -I.texcoord0 + float2(1,1);
+	float2 texcoord = -I.texcoord0 + float2(1.0,1.0);
 	
-	float3 distortion = float3(-screen_res.z * uDistortion,0,screen_res.z * uDistortion);
+	float3 distortion = float3(-screen_res.z * uDistortion,0.0,screen_res.z * uDistortion);
 	
 	//ghost vector to image center
 	float2 ghostVector = (float2(0.5,0.5) - texcoord)*uGhostDispersal;
@@ -36,34 +36,34 @@ half4		main		(		v2p		I		)		:		COLOR
 	float2 direction = normalize(ghostVector);
 	
 	//sample ghosts
-	//half4 result = half4(0,0,0,0);
-	half3 result=half3(0,0,0);
-	for (int i = 0; i < GHOSTS; i++)
+
+	half3 result=half3(0.0,0.0,0.0);
+	for (int i = 0; i < LFX_GHOST; i++)
 	{
 		float2 offset = frac(texcoord + ghostVector * float(i));
 		
 		float weight = lenght(float2(0.5,0.5) - offset)/lenght(float2(0.5,0.5));
-		weight = pow(1-weight,uGhostWeight);//10
+		weight = pow(1-weight,uGhostWeight);
 		
-		//result += tex2D(sTreshold,offset)*weight;
+
 		result += textureDistorted(sTreshold,offset,direction,distortion)*weight;
 	}
 	
-	#ifdef COLORIZE
+	#ifdef LFX_COLORIZE
 		result *= tex2D(s1Dcolor,lenght(float2(0.5,0.5) - texcoord)/lenght(float2(0.5,0.5)));
 	#endif
 	
 	//sample halo
-	#ifdef HALO
+	#ifdef LFX_HALO
 		float2 haloVector = normalize(ghostVector)*uHaloWidth;
 	
 		float weight = lenght(float2(0.5,0.5) - frac(texcoord + haloVector))/lenght(float2(0.5,0.5));
-		weight = pow(1-weight,uHaloWeight);//5
+		weight = pow(1-weight,uHaloWeight);
 	
-		//result += tex2D(sTreshold,texcoord + haloVector)*weight;
+
 		result += textureDistorted(sTreshold,texcoord + haloVector,direction,distortion)*weight;
 	#endif
 	
-	//return result;
+
 	return half4(result,1);
 }

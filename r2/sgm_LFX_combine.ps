@@ -6,17 +6,17 @@ uniform sampler2D sDirt;
 uniform sampler2D sFlares;
 uniform sampler2D sStar;
 
-#define LFX_DEBUG
-#define CAM_EFFECTS//use dirty lens
+#define LFX_DEBUG_STARBURST
+#define LFX_CAMERA_EFFECTS//use dirty lens
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 half4		main		(		v2p		I		)		:		COLOR
 {
-	#ifdef LFX_DEBUG
+	#ifdef LFX_DEBUG_STARBURST
 		float3 camX = m_V[0].xyz;
 		float3 camZ = m_V[1].xyz;
 	
-		float camrot = dot(camX,float3(0,0,1)) + dot(camZ,float3(0,1,0));
+		float camrot = dot(camX,float3(0.0,0.0,1.0)) + dot(camZ,float3(0.0,1.0,0.0));
 	
 		float3x3 scaleBias1 = 
 		(
@@ -38,22 +38,22 @@ half4		main		(		v2p		I		)		:		COLOR
 		);
 	
 		float3x3 lensStarMatrix = scaleBias2 * rotation * scaleBias1;
-	#endif//LFX_DEBUG
+	#endif
 	
-	//half4 lensMod = tex2D(sDirt,I.texcoord0);
-	half4 lensMod=half4(1,1,1,1);//(0,0,0,0);
-	#ifdef CAM_EFFECTS
+
+	half4 lensMod=half4(1.0,1.0,1.0,1.0);
+	#ifdef LFX_CAMERA_EFFECTS
 		lensMod = tex2D(sDirt,I.texcoord0);
 	
-		#ifdef LFX_DEBUG
-			float2 lensStarTexcoord = (lensStarMatrix * float3(I.texcoord0,1)).xy;
+		#ifdef LFX_DEBUG_STARBURST
+			float2 lensStarTexcoord = (lensStarMatrix * float3(I.texcoord0,1.0)).xy;
 			lensMod += tex2D(sStar,lensStarTexcoord);
-		#endif//LFX_DEBUG
-		lensMod*=uCamEffectsPower;
-	#endif//CAM_EFFECTS
+		#endif
+		lensMod *= uCamEffectsPower;
+	#endif
 	
 	half4 lensFlare = tex2D(sFlares,I.texcoord0)*lensMod;
-	lensFlare *=uFlaresPower;
+	lensFlare *= uFlaresPower;
 	half4 result = tex2D(sScene,I.texcoord0)+lensFlare;
 	return result;
 }

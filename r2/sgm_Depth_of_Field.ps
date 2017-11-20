@@ -1,0 +1,35 @@
+#include "common.h"
+#include "sgm_Bokeh.h"
+
+uniform half4 DDOFFactor;
+
+half DDOFFactor(half depth)
+{
+	half focus = depth - DDOFParams.y;
+	half far = saturate( focus/(DDOFParams.z - DDOFParams.y) );
+	half near = saturate( focus/(DDOFParams.x - DDOFParams.y) );
+	half blur = near + far;
+	blur*=blur;
+	return blur;
+}
+
+//#define DDOF_BLURRING_DEPTH
+#define EPSDEPTH 0.0001h
+//////////////////////////////////////////////////////////////////////////////////////////
+//
+half4		main		(		v2p		I		)		:		COLOR
+{
+	float2 texcoord = I.texcoord0;
+	half depth;
+	#ifdef DDOF_BLURRING_DEPTH
+		depth = bdepth(texcoord);
+	#else
+		depth = tex2D(sPosition,texcoord).z;
+	#endif
+	if (depth <= EPSDEPTH)
+		depth = DDOFParams.w;
+	half blur = DDOFFactor(depth);
+	
+	half3 result = bokeh(texcoord,blur);
+	return half4(result,1);
+}
