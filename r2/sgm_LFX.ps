@@ -2,10 +2,11 @@
 
 half3 textureDistorted(sampler2D sInput, float2 texcoord, float2 direction, float3 distortion)
 {
-	return half3(
-	tex2D(sInput,texcoord + direction * distortion.r).r,
-	tex2D(sInput,texcoord + direction * distortion.g).g,
-	tex2D(sInput,texcoord + direction * distortion.b).b
+	return half3
+	(
+		tex2D(sInput,texcoord + direction * distortion.r).r,
+		tex2D(sInput,texcoord + direction * distortion.g).g,
+		tex2D(sInput,texcoord + direction * distortion.b).b
 	);
 }
 
