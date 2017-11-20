@@ -1,0 +1,20 @@
+#include "common.h"
+
+uniform float uTreshold;
+uniform sampler2D sColor;
+
+//////////////////////////////////////////////////////////////////////////////////////////
+//
+half4		main		(		v2p		I		)		:		COLOR
+{
+	half4 color = tex2D(sColor,I.texcoord0);
+	
+	float luminance = dot(LUMINANCE_VECTOR,color.rgb);
+	
+	luminance = max(0,luminance-uTreshold);
+	
+	color.rgb*=sign(luminance);
+	color.a=1;
+	
+	return color;
+}
