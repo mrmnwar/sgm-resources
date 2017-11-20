@@ -1,0 +1,25 @@
+#include "common.h"
+
+uniform float2 uDirection;
+uniform float uSigma;
+uniform sampler2D sBlur;
+
+float g(float x)
+{
+	return pow( 2.71829, -x * x/(2 * uSigma * uSigma) )/sqrt( 2 * 3.141593 * uSigma * uSigma );
+}
+
+#define BLUR_SIZE 8
+//////////////////////////////////////////////////////////////////////////////////////////
+//
+half4		main		(		v2p		I		)		:		COLOR
+{
+	half4 result=half4(0,0,0,0);
+	
+	for ( int k = -BLUR_SIZE; k <= BLUR_SIZE; k ++ )
+	{
+		result += tex2D( sBlur, I.texcoord0 + float2(uDirection.x * k * screen_res.z, uDirection.y * k * screen_res.w) )*g(k);
+	}
+	result.w=1;
+	return result;
+}
