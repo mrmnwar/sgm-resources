@@ -11,6 +11,31 @@ uniform sampler2D sMotionBlurMask;
 //
 half4		main		(		v2p		I		)		:		COLOR
 {
+	float2 texcoord=I.texcoord0.xy;
+	
+	half4 position4 = half4(tex2D(sPosition,texcoord).xyz,1.h);
+	
+	half4 positionCurrent = mul(matrixCurrent,position4);
+	half4 positionPrevious = mul(matrixPrevious,position4);
+	half2 positionVelocity = uBlur * ((positionCurrent.xy/positionCurrent.w)-(positionPrevious.xy/positionPrevious.w));
+	      positionVelocity = clamp(positionVelocity,-MOTION_BLUR_CLAMP,+MOTION_BLUR_CLAMP);
+		  
+	half3 result = tex2D(sScene,texcoord).rgb;	  
+	
+	half3 blurred=half3(0,0,0);
+	for (int i = 1; i <= MOTION_BLUR_SAMPLES; i++)
+	{
+		blurred += tex2D(sScene,positionVelocity * half(i) + texcoord).rgb;
+	}
+	
+	blurred/=MOTION_BLUR_SAMPLES;
+	
+	blurred *= tex2D(sMotionBlurMask,texcoord);
+	
+	result += blurred;
+	return half4(result,1);
+	
+	/*
 	float2 texcoord = I.texcoord0;
 	//half3 position = tex2D(sPosition,I.texcoord0).xyz;
 	half3 position = tex2D(sPosition,texcoord).xyz;
@@ -34,4 +59,5 @@ half4		main		(		v2p		I		)		:		COLOR
 	blurred*=tex2D(sMotionBlurMask,texcoord);
 	result+=blurred;
 	return result;
+	*/
 }
