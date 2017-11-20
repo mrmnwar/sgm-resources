@@ -1,0 +1,65 @@
+#include "common.h"
+
+half3 textureDistorted(sampler2D sInput, float2 texcoord, float2 direction, float3 distortion)
+{
+	return half3(
+	tex2D(sInput,texcoord + direction * distortion.r).r,
+	tex2D(sInput,texcoord + direction * distortion.g).g,
+	tex2D(sInput,texcoord + direction * distortion.b).b
+	);
+}
+
+uniform float uGhostDispersal;
+uniform float uGhostWeight;
+uniform float uHaloWeight;
+uniform float uHaloWidth;
+uniform float uDistortion;
+
+uniform sampler2D s1Dcolor;
+uniform sampler2D sTreshold;
+
+#define GHOSTS 7//num of ghosts
+#define COLORIZE
+#define HALO
+//////////////////////////////////////////////////////////////////////////////////////////
+//
+half4		main		(		v2p		I		)		:		COLOR
+{
+	float2 texcoord = -I.texcoord0 + float2(1,1);
+	
+	float3 distortion = float3(-screen_res.z * uDistortion,0,screen_res.z * uDistortion);
+	
+	float2 ghostVector = (float2(0.5,0.5) - texcoord)*uGhostDispersal;
+	
+	float2 direction = normalize(ghostVector);
+	
+	//half4 result = half4(0,0,0,0);
+	half3 result=half3(0,0,0);
+	for (int i = 0; i < GHOSTS; i++)
+	{
+		float2 offset = frac(texcoord + ghostVector * float(i));
+		
+		float weight = lenght(float2(0.5,0.5) - offset)/lenght(float2(0.5,0.5));
+		weight = pow(1-weight,uGhostWeight);//10
+		
+		//result += tex2D(sTreshold,offset)*weight;
+		result += textureDistorted(sTreshold,offset,direction,distortion)*weight;
+	}
+	
+	#ifdef COLORIZE
+		result *= tex2D(s1Dcolor,lenght(float2(0.5,0.5) - texcoord)/lenght(float2(0.5,0.5)));
+	#endif
+	
+	#ifdef HALO
+		float2 haloVector = normalize(ghostVector)*uHaloWidth;
+	
+		float weight = lenght(float2(0.5,0.5) - frac(texcoord + haloVector))/lenght(float2(0.5,0.5));
+		weight = pow(1-weight,uHaloWeight);//5
+	
+		//result += tex2D(sTreshold,texcoord + haloVector)*weight;
+		result += textureDistorted(sTreshold,texcoord + haloVector,direction,distortion)*weight;
+	#endif
+	
+	//return result;
+	return half4(result,1);
+}
