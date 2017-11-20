@@ -1,7 +1,14 @@
 #include "common.h"
 
+struct		v2p		
+{
+	float4		hposition		:		POSITION;
+	float2		texcoord0		:		TEXCOORD0;
+};
+
 uniform float2 uDirection;
 uniform float uSigma;
+uniform float4 screen_res;
 
 
 float g(float x)

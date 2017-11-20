@@ -1,5 +1,11 @@
 #include "common.h"
 
+struct		v2p		
+{
+	float4		hposition		:		POSITION;
+	float2		texcoord0		:		TEXCOORD0;
+};
+
 half3 textureDistorted(sampler2D sInput, float2 texcoord, float2 direction, float3 distortion)
 {
 	return half3
@@ -15,6 +21,7 @@ uniform float uGhostWeight;//10
 uniform float uHaloWeight;//5
 uniform float uHaloWidth;
 uniform float uDistortion;
+uniform float4 screen_res;
 
 uniform sampler2D s1Dcolor;
 uniform sampler2D sTreshold;

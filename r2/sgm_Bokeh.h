@@ -9,6 +9,7 @@ uniform half uDepthBlurSize;
 uniform half uPentagonFeather;
 uniform half uBokehFringe;
 uniform float uBokehNoiseAmount;
+uniform float4 screen_res;
 
 #define BOKEH_NOISE
 //#define BOKEH_PENTAGON//use pentagonal shape

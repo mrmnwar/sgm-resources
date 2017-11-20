@@ -1,5 +1,11 @@
 #include "common.h"
 
+struct		v2p		
+{
+	float4		hposition		:		POSITION;
+	float2		texcoord0		:		TEXCOORD0;
+};
+
 uniform half4x4 matrixCurrent;
 uniform half4x4 matrixPrevious;
 uniform half2 uBlur;

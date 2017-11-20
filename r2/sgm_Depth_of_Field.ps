@@ -1,6 +1,12 @@
 #include "common.h"
 #include "sgm_Bokeh.h"
 
+struct		v2p		
+{
+	float4		hposition		:		POSITION;
+	float2		texcoord0		:		TEXCOORD0;
+};
+
 uniform half4 DDOFParams;
 
 half DDOFFactor(half depth)
