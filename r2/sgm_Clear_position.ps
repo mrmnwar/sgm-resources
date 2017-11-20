@@ -1,0 +1,18 @@
+#include "common.h"
+
+struct outPN
+{
+	half4		position		:		COLOR0;
+	half4		normal			:		COLOR1;
+};
+
+#define SGM_OVER_DEPTH 10000.0f
+//////////////////////////////////////////////////////////////////////////////////////////
+//
+outPN		main		(		v2p		I		)
+{
+	outPN	O;
+	O.position = half4(0.0f,	0.0f,	SGM_OVER_DEPTH,		0.0f);
+	O.normal = half4(0.0f,		0.0f,		0.0f,		0.0f);
+	return O;
+}
