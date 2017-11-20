@@ -1,9 +1,24 @@
 #ifndef SGM_BOKEH_H_INCLUDED
 #define SGM_BOKEH_H_INCLUDED
 
+uniform float uBokehBias;
+uniform float uBokehGain;
+uniform float uBokehMaxBlur;
+uniform float uBokehTreshold;
+uniform float uDepthBlurSize;
+uniform float uPentagonFeather;
+uniform float uBokehFringe;
+uniform float uBokehNoiseAmount;
+
+#define BOKEH_NOISE
+//#define BOKEH_PENTAGON
+#define BOKEH_RINGS int(3)
+#define BOKEH_SAMPLES int(3)
+
 float penta(float2 texcoord)
 {
-	float scale = float(RINGS)-1.3;
+	//float scale = float(RINGS)-1.3;
+	float scale = float(BOKEH_RINGS)-1.3;
 	float4 HS0 = float4( 1,            0,            0,  1);
 	float4 HS1 = float4( 0.309016994,  0.951056516,  0,  1);
 	float4 HS2 = float4(-0.809016994,  0.587785252,  0,  1);
@@ -113,9 +128,11 @@ float3 bokeh(float2 texcoord, float blur)
 		float s=1;
 		int ringsamples;
 		
-		for (int i = 1; i <= RINGS; i++)
+		for (int i = 1; i <= BOKEH_RINGS; i++)
+		//for (int i = 1; i <= RINGS; i++)
 		{
-			ringsamples = i * SAMPLES;
+			//ringsamples = i * SAMPLES;
+			ringsamples = i * BOKEH_SAMPLES;
 			
 			for (int j = 0; j < ringsamples; j++)
 			{
@@ -123,11 +140,13 @@ float3 bokeh(float2 texcoord, float blur)
 				float pw = (cos(float(j)*step)*float(i));
 				float ph = (sin(float(j)*step)*float(i));
 				float p=1;
-				#ifdef USE_BOKEH_PENTAGON
+				#ifdef BOKEH_PENTAGON
+				//#ifdef USE_BOKEH_PENTAGON
 					p = penta(float2(pw,ph));
 				#endif	
-				col += color(texcoord + float2(pw*w,ph*h),blur)*lerp(1,(float(i))/(float(RINGS)),uBokehBias)*p;
-				s +=1*lerp(1,(float(i))/(float(RINGS)),uBokehBias)*p;
+				col += color(texcoord + float2(pw*w,ph*h),blur)*lerp(1,(float(i))/(float(BOKEH_RINGS)),uBokehBias)*p;	//lerp(1,(float(i))/(float(RINGS)),uBokehBias)*p;
+				//s +=1*lerp(1,(float(i))/(float(RINGS)),uBokehBias)*p;
+				s += 1*lerp(1,(float(i))/(float(BOKEH_RINGS)),uBokehBias)*p;
 			}
 		}
 		col/=s;

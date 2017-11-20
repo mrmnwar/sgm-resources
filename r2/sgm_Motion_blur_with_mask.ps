@@ -1,0 +1,37 @@
+#include "common.h"
+
+uniform half4x4 matrixCurrent;
+uniform half4x4 matrixPrevious;
+uniform half2 uBlur;
+uniform sampler2D sMotionBlurMask;
+
+#define MOTION_BLUR_SAMPLES int(12)
+#define MOTION_BLUR_CLAMP half(0.001)
+//////////////////////////////////////////////////////////////////////////////////////////
+//
+half4		main		(		v2p		I		)		:		COLOR
+{
+	float2 texcoord = I.texcoord0;
+	//half3 position = tex2D(sPosition,I.texcoord0).xyz;
+	half3 position = tex2D(sPosition,texcoord).xyz;
+	half4 position4 = half4(position,1.h);
+	
+	half4 positionCurrent = mul(matrixCurrent,position4);
+	half4 positionPrevious = mul(matrixPrevious,position4);
+	half2 positionVelocity = uBlur*((positionCurrent.xy/positionCurrent.w)-(positionPrevious.xy/positionPrevious.w));
+	      positionVelocity = clamp(positionVelocity,-MOTION_BLUR_CLAMP,+MOTION_BLUR_CLAMP);
+		  
+	//half3 blurred = tex2D(sScene,I.texcoord0).rgb;	  
+	half4 result = tex2D(sScene,I.texcoord);
+	half4 blurred =half4(0,0,0,0);
+	for ( int i = 1; i <= MOTION_BLUR_SAMPLES; i++ )
+	//for int ( int i = 1; i <= 11; i++ )
+	{
+		blurred += tex2D(sScene,positionVelocity * half(i) + texcoord);
+	}
+	//blurred/=11;
+	blurred/=MOTION_BLUR_SAMPLES;
+	blurred*=tex2D(sMotionBlurMask,texcoord);
+	result+=blurred;
+	return result;
+}
